@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国近2000年温度变化（含朝代标注）</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        body { margin: 0; background: #f5f7fa; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: "Segoe UI", Roboto, sans-serif; }
+        .container { width: 95%; max-width: 1400px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); padding: 20px 20px 10px 20px; }
+        #chart { width: 100%; height: 660px; }
+        .footnote { text-align: center; font-size: 13px; color: #666; padding: 12px 0 6px 0; border-top: 1px solid #eee; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="chart"></div>
+    <div class="footnote">
+        <span style="color:#e74c3c;">■ 暖期</span> <span style="color:#3498db;">■ 冷期</span> &nbsp;|&nbsp; 
+        基准：1851‑1950 &nbsp;|&nbsp; 数据：Ge et al., 2013 &nbsp;|&nbsp; 朝代区间标注（透明标签）
+    </div>
+</div>
+
+<script>
+    // ---------- 原始数据 ----------
+    const years = [
+        5,15,25,35,45,55,65,75,85,95,105,115,125,135,145,155,165,175,185,195,
+        205,215,225,235,245,255,265,275,285,295,305,315,325,335,345,355,365,375,385,395,
+        405,415,425,435,445,455,465,475,485,495,505,515,525,535,545,555,565,575,585,595,
+        605,615,625,635,645,655,665,675,685,695,705,715,725,735,745,755,765,775,785,795,
+        805,815,825,835,845,855,865,875,885,895,905,915,925,935,945,955,965,975,985,995,
+        1005,1015,1025,1035,1045,1055,1065,1075,1085,1095,1105,1115,1125,1135,1145,1155,1165,1175,1185,1195,
+        1205,1215,1225,1235,1245,1255,1265,1275,1285,1295,1305,1315,1325,1335,1345,1355,1365,1375,1385,1395,
+        1405,1415,1425,1435,1445,1455,1465,1475,1485,1495,1505,1515,1525,1535,1545,1555,1565,1575,1585,1595,
+        1605,1615,1625,1635,1645,1655,1665,1675,1685,1695,1705,1715,1725,1735,1745,1755,1765,1775,1785,1795,
+        1805,1815,1825,1835,1845,1855,1865,1875,1885,1895,1905,1915,1925,1935,1945,1955,1965,1975,1985,1995
+    ];
+
+    const temps = [
+        0.33,0.39,-0.08,0.24,0.29,0.30,0.13,0.02,0.16,0.29,
+        0.19,0.47,0.27,-0.06,-0.03,0.18,0.30,0.32,-0.04,0.17,
+        -0.28,-0.16,-0.13,0.03,0.07,-0.21,-0.33,0.12,-0.01,-0.14,
+        0.16,-0.08,-0.15,-0.24,-0.06,0.03,0.21,0.03,-0.02,0.05,
+        0.07,0.15,0.13,-0.01,-0.07,-0.09,-0.07,-0.25,-0.08,-0.07,
+        -0.08,-0.14,0.01,-0.03,-0.11,0.10,0.22,0.30,0.12,0.01,
+        -0.13,-0.08,0.00,0.03,-0.06,0.10,0.28,0.20,0.28,0.37,
+        0.32,0.43,0.14,0.27,0.24,0.18,-0.10,-0.11,-0.11,-0.28,
+        -0.38,-0.28,0.01,-0.06,-0.22,-0.03,0.02,-0.19,-0.21,-0.38,
+        -0.28,-0.13,0.11,-0.02,0.12,0.23,0.40,0.26,0.11,0.45,
+        0.16,0.17,0.60,0.40,0.29,0.11,0.61,0.18,0.40,0.40,
+        0.53,0.25,0.24,0.08,0.00,-0.03,0.03,-0.04,0.03,0.30,
+        0.24,0.38,0.39,0.55,0.46,0.51,0.42,0.49,0.13,0.01,
+        0.02,-0.26,-0.05,-0.09,-0.26,-0.37,-0.07,0.02,-0.03,-0.16,
+        -0.13,-0.32,-0.16,-0.25,-0.20,-0.12,-0.15,0.00,0.04,-0.09,
+        0.04,-0.19,-0.03,-0.37,0.03,0.06,-0.19,-0.01,0.01,-0.01,
+        -0.04,-0.15,-0.18,-0.24,-0.15,-0.51,-0.33,-0.13,-0.31,-0.16,
+        0.04,-0.26,-0.19,0.11,0.08,-0.03,-0.12,-0.05,-0.14,-0.23,
+        -0.15,-0.37,-0.21,-0.47,-0.26,-0.31,-0.37,-0.38,0.01,-0.10,
+        0.15,0.14,0.15,0.29,0.41,0.26,0.15,0.16,0.43,0.70
+    ];
+
+    const dataPairs = years.map((y, i) => [y, temps[i]]);
+
+    // ---------- 冷暖期区间（沿用论文划分） ----------
+    const warmPeriods = [[1,200], [551,760], [951,1320], [1921,2000]];
+    const coldPeriods = [[201,350], [441,530], [781,950], [1321,1920]];
+
+    // ---------- 朝代区间（起止年份，名称） ----------
+    const dynasties = [
+        { name: '汉', start: 1, end: 220 },
+        { name: '三国', start: 220, end: 280 },
+        { name: '西晋', start: 265, end: 316 },
+        { name: '东晋', start: 317, end: 420 },
+        { name: '南北朝', start: 420, end: 589 },
+        { name: '隋唐', start: 581, end: 907 },
+        { name: '五代', start: 907, end: 960 },
+        { name: '北宋', start: 960, end: 1127 },
+        { name: '南宋', start: 1127, end: 1279 },
+        { name: '元', start: 1271, end: 1368 },
+        { name: '明', start: 1368, end: 1644 },
+        { name: '清', start: 1644, end: 1912 },
+        { name: '近代', start: 1912, end: 1995 }
+    ];
+
+    // ---------- 构建 markArea 数据 ----------
+    // 先放冷暖色块（带颜色，无标签）
+    let markAreaData = [];
+
+    // 暖期
+    warmPeriods.forEach(p => {
+        markAreaData.push([
+            { xAxis: p[0], itemStyle: { color: 'rgba(231, 76, 60, 0.25)' } },
+            { xAxis: p[1] }
+        ]);
+    });
+
+    // 冷期
+    coldPeriods.forEach(p => {
+        markAreaData.push([
+            { xAxis: p[0], itemStyle: { color: 'rgba(52, 152, 219, 0.25)' } },
+            { xAxis: p[1] }
+        ]);
+    });
+
+    // 朝代标注（透明背景，仅显示标签）
+    dynasties.forEach(d => {
+        markAreaData.push([
+            { 
+                xAxis: d.start, 
+                itemStyle: { color: 'rgba(0,0,0,0)' },  // 完全透明
+                label: {
+                    show: true,
+                    formatter: d.name,
+                    position: 'insideBottom',
+                    color: '#2c3e50',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    fontFamily: 'Microsoft YaHei, sans-serif',
+                    textShadow: '0 0 3px rgba(255,255,255,0.8)'
+                }
+            },
+            { xAxis: d.end }
+        ]);
+    });
+
+    // ---------- 图表初始化 ----------
+    const chartDom = document.getElementById('chart');
+    const myChart = echarts.init(chartDom);
+
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                const p = params[0];
+                if (!p) return '';
+                return `<strong>公元 ${p.data[0]} 年</strong><br/>温度距平：<strong style="color:#c0392b;">${p.data[1].toFixed(2)} ℃</strong>`;
+            },
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: '#ccc',
+            borderWidth: 1,
+            textStyle: { fontSize: 14 }
+        },
+        legend: {
+            data: ['温度距平 (PLS)'],
+            top: 5,
+            left: 'center',
+            icon: 'roundRect',
+            textStyle: { fontSize: 15 }
+        },
+        grid: {
+            left: '6%',
+            right: '4%',
+            bottom: '15%',   // 为朝代标签留足空间
+            top: '15%'
+        },
+        xAxis: {
+            type: 'value',
+            min: 0,
+            max: 2000,
+            splitLine: { show: false },
+            axisLabel: { 
+                formatter: function(v) { return v + '年'; },
+                rotate: 45,
+                fontSize: 11
+            },
+            axisLine: { lineStyle: { color: '#333' } },
+            name: '年代',
+            nameLocation: 'center',
+            nameGap: 50,
+            nameTextStyle: { fontSize: 14, fontWeight: 'bold' }
+        },
+        yAxis: {
+            type: 'value',
+            splitLine: { lineStyle: { type: 'dashed', color: '#e0e0e0' } },
+            axisLabel: { 
+                formatter: function(v) { return v.toFixed(1) + '℃'; }
+            },
+            name: '温度距平',
+            nameLocation: 'center',
+            nameGap: 55,
+            nameTextStyle: { fontSize: 14, fontWeight: 'bold' }
+        },
+        series: [{
+            name: '温度距平 (PLS)',
+            type: 'line',
+            data: dataPairs,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 5,
+            lineStyle: {
+                width: 3,
+                color: '#c0392b',
+                shadowColor: 'rgba(192, 57, 43, 0.3)',
+                shadowBlur: 8
+            },
+            areaStyle: {
+                color: 'rgba(192, 57, 43, 0.08)'
+            },
+            markArea: {
+                silent: true,
+                data: markAreaData
+            }
+        }]
+    };
+
+    myChart.setOption(option);
+    window.addEventListener('resize', () => myChart.resize());
+</script>
+</body>
+</html>
