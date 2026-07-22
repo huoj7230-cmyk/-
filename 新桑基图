@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桑基图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #ffffff;
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            padding: 20px;
+            /* 不添加任何 flex 或垂直居中，只做水平 */
+        }
+        #chart {
+            width: 90%;
+            max-width: 1200px;
+            height: 620px;
+            margin: 0 auto;          /* 块级水平居中 */
+            display: block;
+        }
+        .footer {
+            margin: 12px auto 0;     /* 水平居中 */
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+            width: 90%;
+            max-width: 1200px;
+        }
+        .footer span { margin: 0 10px; }
+        .tag { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; }
+    </style>
+</head>
+<body>
+<div id="chart"></div>
+<div class="footer">
+    <span><span class="tag" style="background:#e74c3c;"></span>冷背景</span>
+    <span><span class="tag" style="background:#f39c12;"></span>暖背景</span>
+    <span>数据来源：方修琦等，2015《中国科学：地球科学》</span>
+    <span>|</span>
+    <span>🖱️ 鼠标悬停查看数据</span>
+</div>
+<script>
+    const pathData = [
+        { temp: '冷', grain: '歉收', famine: '重度饥荒', revolt: '多起义', pct: 5.2 },
+        { temp: '冷', grain: '歉收', famine: '中度饥荒', revolt: '多起义', pct: 5.2 },
+        { temp: '冷', grain: '歉收', famine: '中度饥荒', revolt: '无起义', pct: 11.2 },
+        { temp: '冷', grain: '歉收', famine: '轻度饥荒', revolt: '无起义', pct: 6.0 },
+        { temp: '冷', grain: '常年', famine: '中度饥荒', revolt: '多起义', pct: 5.2 },
+        { temp: '冷', grain: '丰收', famine: '中度饥荒', revolt: '多起义', pct: 4.3 },
+        { temp: '冷', grain: '丰收', famine: '轻度饥荒', revolt: '无起义', pct: 5.2 },
+        { temp: '暖', grain: '歉收', famine: '中度饥荒', revolt: '无起义', pct: 11.4 },
+        { temp: '暖', grain: '歉收', famine: '轻度饥荒', revolt: '无起义', pct: 6.3 },
+        { temp: '暖', grain: '常年', famine: '中度饥荒', revolt: '无起义', pct: 11.2 },
+        { temp: '暖', grain: '常年', famine: '轻度饥荒', revolt: '无起义', pct: 4.2 },
+        { temp: '暖', grain: '丰收', famine: '重度饥荒', revolt: '无起义', pct: 4.2 },
+        { temp: '暖', grain: '丰收', famine: '轻度饥荒', revolt: '无起义', pct: 19.8 }
+    ];
+
+    const nodes = [
+        { name: '冷', itemStyle: { color: '#e74c3c' } },
+        { name: '暖', itemStyle: { color: '#f39c12' } },
+        { name: '粮食歉收' }, { name: '粮食常年' }, { name: '粮食丰收' },
+        { name: '重度饥荒' }, { name: '中度饥荒' }, { name: '轻度饥荒' },
+        { name: '多农民起义' }, { name: '无农民起义' }
+    ];
+
+    function buildLinks(data) {
+        const agg = {};
+        data.forEach(d => {
+            const key = `${d.temp}|${d.grain}|${d.famine}|${d.revolt}`;
+            if (!agg[key]) agg[key] = { ...d, count: 0 };
+            agg[key].count += d.pct;
+        });
+        const links = [];
+        Object.values(agg).forEach(d => {
+            const val = d.count;
+            links.push({ source: d.temp, target: `粮食${d.grain}`, value: val });
+            links.push({ source: `粮食${d.grain}`, target: d.famine, value: val });
+            links.push({ source: d.famine, target: d.revolt === '多起义' ? '多农民起义' : '无农民起义', value: val });
+        });
+        return links;
+    }
+
+    const chart = echarts.init(document.getElementById('chart'));
+    chart.setOption({
+        tooltip: {
+            trigger: 'item',
+            triggerOn: 'mousemove',
+            formatter: function(p) {
+                if (p.dataType === 'edge') {
+                    return `${p.data.source} → ${p.data.target}<br/>占比：<strong>${p.data.value.toFixed(1)}%</strong>`;
+                }
+                return `${p.name}<br/>总量：${p.value || '-'}`;
+            }
+        },
+        series: [{
+            type: 'sankey',
+            top: 10,
+            bottom: 10,
+            left: '10%',          // 左侧留白 10%
+            right: '10%',         // 右侧留白 10%，使图表在画布内居中
+            nodeAlign: 'justify', // 节点两端对齐，让左右分布更均匀
+            nodeWidth: 18,
+            nodeGap: 12,
+            draggable: true,
+            label: { show: true, position: 'right', fontSize: 13, fontWeight: '500', color: '#333' },
+            lineStyle: { color: 'gradient', curveness: 0.5, opacity: 0.35 },
+            emphasis: { focus: 'adjacency', lineStyle: { opacity: 0.8 } },
+            data: nodes,
+            links: buildLinks(pathData)
+        }]
+    });
+    window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>
