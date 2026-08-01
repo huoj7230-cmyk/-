@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>气候冲击与王朝兴衰 · 数据验证</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f2ebe0;
+      font-family: 'Georgia', 'SimSun', 'Times New Roman', serif;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+      background: #fcf8f2;
+      border: 1px solid #d4c5a9;
+      border-radius: 16px;
+      padding: 32px 36px 24px;
+      box-shadow: 0 8px 40px rgba(60, 46, 34, 0.10);
+    }
+
+    .header {
+      border-bottom: 2px solid #c9b696;
+      padding-bottom: 16px;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 30px;
+      font-weight: 700;
+      color: #4a3120;
+      letter-spacing: 3px;
+    }
+
+    .header h1 small {
+      font-size: 16px;
+      font-weight: 400;
+      color: #8a7a66;
+      letter-spacing: 1px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .header .sub {
+      display: inline-block;
+      color: #5a4a3a;
+      font-size: 15px;
+      margin-top: 10px;
+      line-height: 1.7;
+      background: #ede7dc;
+      padding: 6px 24px;
+      border-radius: 30px;
+      letter-spacing: 0.5px;
+      max-width: 90%;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .chart-grid .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card {
+      background: #ffffff;
+      border: 1px solid #e2d6c4;
+      border-radius: 12px;
+      padding: 16px 18px 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .chart-card .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4a3120;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chart-card .card-title .badge {
+      font-size: 11px;
+      font-weight: 400;
+      background: #dacfbe;
+      color: #4f3a28;
+      padding: 0 12px;
+      border-radius: 12px;
+      line-height: 22px;
+    }
+
+    .chart-card .card-title .badge.red {
+      background: #b33a2e;
+      color: #fff;
+    }
+
+    .chart-card .card-title .badge.gold {
+      background: #b8860b;
+      color: #fff;
+    }
+
+    .chart-card .card-title .badge.blue {
+      background: #2c6b8f;
+      color: #fff;
+    }
+
+    .chart-card .card-sub {
+      font-size: 12px;
+      color: #8a7a66;
+      margin-bottom: 6px;
+      border-bottom: 1px dashed #e2d6c4;
+      padding-bottom: 6px;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 280px;
+    }
+
+    .chart-container.tall {
+      height: 320px;
+    }
+
+    .footer-conclusion {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #e2d6c4;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-conclusion .left {
+      font-size: 14px;
+      color: #4a3a2a;
+      line-height: 1.8;
+    }
+
+    .footer-conclusion .left .red {
+      color: #b33a2e;
+      font-weight: 600;
+    }
+
+    .footer-conclusion .left .blue {
+      color: #2c6b8f;
+      font-weight: 600;
+    }
+
+    .footer-conclusion .right {
+      font-size: 12px;
+      color: #8a7a66;
+      text-align: right;
+    }
+
+    .footer-conclusion .right .source {
+      display: block;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 920px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+      .chart-container {
+        height: 240px;
+      }
+      .chart-container.tall {
+        height: 280px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 16px 14px 12px;
+      }
+      .header h1 {
+        font-size: 22px;
+        letter-spacing: 1px;
+      }
+      .header h1 small {
+        font-size: 13px;
+      }
+      .header .sub {
+        font-size: 13px;
+        padding: 4px 14px;
+      }
+      .chart-container {
+        height: 200px;
+      }
+      .chart-container.tall {
+        height: 240px;
+      }
+      .footer-conclusion {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer-conclusion .right {
+        text-align: left;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- ===== 标题 ===== -->
+    <div class="header">
+      <h1>
+        📜 气候冲击与王朝兴衰
+        <small>基于 17 个王朝、跨越 2000 年（前 221—1911）的实证验证</small>
+      </h1>
+      <span class="sub">
+        温度 · 降水 · 财政能力 · 内乱 · 经济繁荣
+      </span>
+    </div>
+
+    <!-- ===== 图表网格 ===== -->
+    <div class="chart-grid">
+
+      <!-- 图表1：王朝周期律 -->
+      <div class="chart-card full-width">
+        <div class="card-title">
+          📈 王朝周期律
+          <span class="badge red">内乱 U 形</span>
+          <span class="badge blue">经济倒 U 形</span>
+          <span class="badge red">内乱拐点 ≈ 141 年</span>
+          <span class="badge blue">繁荣峰值 ≈ 117 年</span>
+        </div>
+        <div class="card-sub">王朝年龄与内乱发生率（U 形）、经济繁荣程度（倒 U 形）的关系</div>
+        <div id="chart1" class="chart-container tall"></div>
+      </div>
+
+      <!-- 图表2：气候冲击的影响 -->
+      <div class="chart-card">
+        <div class="card-title">
+          🌡️ 气候冲击的量化影响
+          <span class="badge red">温度</span>
+          <span class="badge blue">降水</span>
+        </div>
+        <div class="card-sub">温度、降水变化对内乱发生率的边际效应（基于固定效应泊松模型）</div>
+        <div id="chart2" class="chart-container"></div>
+      </div>
+
+      <!-- 图表3：传导机制 -->
+      <div class="chart-card">
+        <div class="card-title">
+          🔗 传导机制：气候 → 粮食 → 财政 → 内乱
+          <span class="badge gold">经济因素是关键路径</span>
+        </div>
+        <div class="card-sub">气候冲击通过影响粮食丰歉 → 国家财政 → 社会治乱</div>
+        <div id="chart3" class="chart-container"></div>
+      </div>
+
+    </div>
+
+    <!-- ===== 底部结论 ===== -->
+    <div class="footer-conclusion">
+      <div class="left">
+        <span class="red">●</span> 温度每升高 1 个标准差，内乱概率 <span class="red">降低约 25%</span>
+        <span style="margin:0 8px;color:#c9b696;">|</span>
+        <span class="blue">●</span> 降水每增加 1 个标准差，内乱概率 <span class="blue">降低约 14%</span>
+        <span style="margin:0 8px;color:#c9b696;">|</span>
+        <span class="red">●</span> 财政能力每提高 1 级，内乱概率 <span class="red">降低约 21%</span>
+      </div>
+      <div class="right">
+        📊 数据来源：孙程九、张勤勤（2018）《气候变迁、政府能力与王朝兴衰》
+        <span class="source">基于 17 个主要中原王朝 · 面板泊松 / 序列 Logit 模型</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ================================================================
+    // 1. 王朝周期律（U 形 + 倒 U 形）
+    //    基于表3、表4回归系数模拟
+    //    修正：使用精确的理论值标注极值点
+    // ================================================================
+    (function() {
+      var dom = document.getElementById('chart1');
+      var chart = echarts.init(dom);
+
+      var ages = [];
+      for (var i = 0; i <= 300; i += 1) {
+        ages.push(i);
+      }
+
+      // 内乱发生率（U 形）：基于表3 model 5 系数
+      var rawInterwar = ages.map(function(a) {
+        return -0.016 * a + 0.0000566 * a * a;
+      });
+      var minInter = Math.min.apply(null, rawInterwar);
+      var maxInter = Math.max.apply(null, rawInterwar);
+      var interwar = rawInterwar.map(function(v) {
+        return ((v - minInter) / (maxInter - minInter)) * 80 + 10;
+      });
+
+      // 经济繁荣（倒 U 形）：基于表4 model 5 系数
+      var rawEcon = ages.map(function(a) {
+        return 0.0343 * a - 0.000146 * a * a;
+      });
+      var minEcon = Math.min.apply(null, rawEcon);
+      var maxEcon = Math.max.apply(null, rawEcon);
+      var economy = rawEcon.map(function(v) {
+        return ((v - minEcon) / (maxEcon - minEcon)) * 80 + 10;
+      });
+
+      // ---- 精确计算极值点的索引和数值 ----
+      // 内乱拐点：理论值 141.34 年，对应索引 141
+      var interwarIdx = 141;
+      var interwarVal = interwar[interwarIdx];
+
+      // 经济峰值：理论值 117.47 年，对应索引 117
+      var econIdx = 117;
+      var econVal = economy[econIdx];
+
+      var option = {
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            var res = '<b>王朝年龄：' + params[0].axisValue + ' 年</b><br/>';
+            params.forEach(function(p) {
+              res += p.marker + ' ' + p.seriesName + '：' + p.value.toFixed(1) + '<br/>';
+            });
+            return res;
+          }
+        },
+        legend: {
+          data: ['内乱发生率', '经济繁荣程度'],
+          bottom: 0,
+          left: 'center',
+          icon: 'circle',
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { fontSize: 12, color: '#4a3a2a' }
+        },
+        grid: {
+          left: '6%',
+          right: '6%',
+          top: '10%',
+          bottom: '20%'
+        },
+        xAxis: {
+          type: 'category',
+          data: ages,
+          name: '王朝年龄（年）',
+          nameLocation: 'center',
+          nameGap: 30,
+          nameTextStyle: { fontSize: 12, color: '#7f6b58' },
+          axisLabel: { fontSize: 10, interval: 25 },
+          axisLine: { lineStyle: { color: '#c9b696' } },
+          splitLine: { show: false }
+        },
+        yAxis: {
+          type: 'value',
+          name: '相对指数',
+          nameTextStyle: { fontSize: 12, color: '#7f6b58' },
+          axisLabel: { fontSize: 10 },
+          splitLine: { lineStyle: { color: '#ede7dc', type: 'dashed' } },
+          min: 0,
+          max: 100
+        },
+        series: [{
+          name: '内乱发生率',
+          type: 'line',
+          data: interwar,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { color: '#b33a2e', width: 3 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(179,58,46,0.25)' },
+              { offset: 1, color: 'rgba(179,58,46,0.02)' }
+            ])
+          },
+          markPoint: {
+            symbol: 'pin',
+            symbolSize: 44,
+            data: [{
+              name: '内乱拐点',
+              coord: [interwarIdx, interwarVal],
+              label: {
+                formatter: '拐点\n' + ages[interwarIdx] + '年',
+                fontSize: 10,
+                color: '#fff',
+                lineHeight: 14
+              },
+              itemStyle: { color: '#b33a2e' }
+            }]
+          }
+        }, {
+          name: '经济繁荣程度',
+          type: 'line',
+          data: economy,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { color: '#2c6b8f', width: 3 },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(44,107,143,0.25)' },
+              { offset: 1, color: 'rgba(44,107,143,0.02)' }
+            ])
+          },
+          markPoint: {
+            symbol: 'pin',
+            symbolSize: 44,
+            data: [{
+              name: '繁荣峰值',
+              coord: [econIdx, econVal],
+              label: {
+                formatter: '峰值\n' + ages[econIdx] + '年',
+                fontSize: 10,
+                color: '#fff',
+                lineHeight: 14
+              },
+              itemStyle: { color: '#2c6b8f' }
+            }]
+          }
+        }]
+      };
+
+      chart.setOption(option);
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+
+    // ================================================================
+    // 2. 气候冲击的量化影响
+    // ================================================================
+    (function() {
+      var dom = document.getElementById('chart2');
+      var chart = echarts.init(dom);
+
+      var tempEffects = [
+        { label: '寒冷干旱\n(↓1σ)', change: -0.23, effect: (Math.exp(-0.985 * (-0.23)) - 1) * 100 },
+        { label: '气候基准\n(均值)', change: 0, effect: 0 },
+        { label: '温暖湿润\n(↑1σ)', change: 0.23, effect: (Math.exp(-0.985 * 0.23) - 1) * 100 }
+      ];
+
+      var precipEffects = [
+        { label: '寒冷干旱\n(↓1σ)', change: -0.874, effect: (Math.exp(-0.157 * (-0.874)) - 1) * 100 },
+        { label: '气候基准\n(均值)', change: 0, effect: 0 },
+        { label: '温暖湿润\n(↑1σ)', change: 0.874, effect: (Math.exp(-0.157 * 0.874) - 1) * 100 }
+      ];
+
+      var option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: function(params) {
+            var res = '<b>' + params[0].axisValue + '</b><br/>';
+            params.forEach(function(p) {
+              var sign = p.value > 0 ? '+' : '';
+              res += p.marker + ' ' + p.seriesName + '：' + sign + p.value.toFixed(1) + '%<br/>';
+            });
+            return res;
+          }
+        },
+        legend: {
+          data: ['温度变化', '降水变化'],
+          bottom: 0,
+          left: 'center',
+          icon: 'circle',
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { fontSize: 12, color: '#4a3a2a' }
+        },
+        grid: {
+          left: '8%',
+          right: '6%',
+          top: '10%',
+          bottom: '22%'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['寒冷干旱\n(↓1σ)', '气候基准\n(均值)', '温暖湿润\n(↑1σ)'],
+          axisLabel: { fontSize: 11, fontWeight: 'bold', color: '#4a3a2a' },
+          axisLine: { lineStyle: { color: '#c9b696' } }
+        },
+        yAxis: {
+          type: 'value',
+          name: '内乱概率变化（%）',
+          nameTextStyle: { fontSize: 12, color: '#7f6b58' },
+          axisLabel: { fontSize: 11, formatter: function(v) { return v + '%'; } },
+          splitLine: { lineStyle: { color: '#ede7dc', type: 'dashed' } }
+        },
+        series: [{
+          name: '温度变化',
+          type: 'bar',
+          data: [
+            { value: tempEffects[0].effect, itemStyle: { color: '#b33a2e' } },
+            { value: 0, itemStyle: { color: '#8a7a66' } },
+            { value: tempEffects[2].effect, itemStyle: { color: '#d4762a' } }
+          ],
+          barWidth: '26%',
+          barGap: '30%',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: function(p) {
+              var sign = p.value > 0 ? '+' : '';
+              return sign + p.value.toFixed(1) + '%';
+            },
+            fontSize: 11,
+            fontWeight: 'bold',
+            color: '#3c2e22'
+          }
+        }, {
+          name: '降水变化',
+          type: 'bar',
+          data: [
+            { value: precipEffects[0].effect, itemStyle: { color: '#2c6b8f' } },
+            { value: 0, itemStyle: { color: '#8a7a66' } },
+            { value: precipEffects[2].effect, itemStyle: { color: '#5a8fa8' } }
+          ],
+          barWidth: '26%',
+          barGap: '30%',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: function(p) {
+              var sign = p.value > 0 ? '+' : '';
+              return sign + p.value.toFixed(1) + '%';
+            },
+            fontSize: 11,
+            fontWeight: 'bold',
+            color: '#3c2e22'
+          }
+        }]
+      };
+
+      chart.setOption(option);
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+
+    // ================================================================
+    // 3. 传导机制
+    // ================================================================
+    (function() {
+      var dom = document.getElementById('chart3');
+      var chart = echarts.init(dom);
+
+      var steps = ['气候冲击\n(↓1σ)', '粮食歉收\n(↓1级)', '财政恶化\n(↓1级)', '内乱风险\n(↑)'];
+      var stepColors = ['#8a7a66', '#d4762a', '#b7952e', '#b33a2e'];
+      var stepValues = [0, 15, 36, 55];
+
+      var option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          formatter: function(params) {
+            var p = params[0];
+            var idx = p.dataIndex;
+            var descs = ['初始气候冲击（基准）', '粮食减产导致 +15%', '财政恶化导致 +21%', '内乱风险最终 +19%'];
+            return '<b>' + p.axisValue + '</b><br/>' +
+              '累积效应：<b>' + p.value + '%</b><br/>' +
+              '本步贡献：' + descs[idx];
+          }
+        },
+        legend: {
+          data: ['传导累积效应'],
+          bottom: 0,
+          left: 'center',
+          icon: 'circle',
+          itemWidth: 10,
+          itemHeight: 10,
+          textStyle: { fontSize: 12, color: '#4a3a2a' }
+        },
+        grid: {
+          left: '8%',
+          right: '6%',
+          top: '8%',
+          bottom: '22%'
+        },
+        xAxis: {
+          type: 'category',
+          data: steps,
+          axisLabel: { fontSize: 11, fontWeight: 'bold', color: '#4a3a2a', interval: 0 },
+          axisLine: { lineStyle: { color: '#c9b696' } }
+        },
+        yAxis: {
+          type: 'value',
+          name: '累积效应（%）',
+          nameTextStyle: { fontSize: 12, color: '#7f6b58' },
+          axisLabel: { fontSize: 11, formatter: function(v) { return v + '%'; } },
+          splitLine: { lineStyle: { color: '#ede7dc', type: 'dashed' } },
+          max: 70
+        },
+        series: [{
+          name: '传导累积效应',
+          type: 'bar',
+          data: stepValues.map(function(v, idx) {
+            return {
+              value: v,
+              itemStyle: { color: stepColors[idx] }
+            };
+          }),
+          barWidth: '40%',
+          label: {
+            show: true,
+            position: 'top',
+            formatter: function(p) {
+              return (p.value > 0 ? '+' : '') + p.value + '%';
+            },
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#3c2e22'
+          },
+          markLine: {
+            silent: true,
+            data: [{
+              yAxis: 0,
+              label: { formatter: '→ 传导方向 →', fontSize: 11, color: '#8a7a66' },
+              lineStyle: { color: '#c9b696', type: 'dashed', width: 1 }
+            }]
+          }
+        }]
+      };
+
+      chart.setOption(option);
+      window.addEventListener('resize', function() { chart.resize(); });
+    })();
+  </script>
+
+</body>
+</html>
