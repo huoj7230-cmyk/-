@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>明代流民迁徙扩散路线</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #f2ebe0;
+      font-family: 'Georgia', 'SimSun', serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #fcf8f2;
+      border: 1px solid #d4c5a9;
+      border-radius: 12px;
+      padding: 20px 20px 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #4f3a28;
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #7f6b58;
+      font-size: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #dacfbe;
+      padding-bottom: 12px;
+    }
+    #map-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #map {
+      width: 100%;
+      height: 780px;
+      background: #f5efe6;
+      border-radius: 8px;
+    }
+    .north-arrow {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 50%;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #2c3e50;
+      pointer-events: none;
+      z-index: 30;
+      border: 1px solid #b3a084;
+      font-size: 18px;
+    }
+    .north-arrow::before {
+      content: "▲";
+      font-size: 26px;
+      color: #c0392b;
+      margin-right: 2px;
+    }
+    .north-arrow span {
+      font-size: 16px;
+      font-weight: 700;
+      margin-left: 2px;
+    }
+    .legend-inner {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #b3a084;
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      z-index: 30;
+      max-width: 200px;
+      max-height: 280px;
+      overflow-y: auto;
+      font-size: 12px;
+      color: #3c2e22;
+    }
+    .legend-inner .legend-title {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #dacfbe;
+      padding-bottom: 4px;
+      text-align: center;
+    }
+    .legend-inner .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+    .legend-inner .color-box {
+      width: 16px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .legend-inner::-webkit-scrollbar {
+      width: 4px;
+    }
+    .legend-inner::-webkit-scrollbar-thumb {
+      background: #b3a084;
+      border-radius: 4px;
+    }
+    .footer {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #e2d6c4;
+      font-size: 12px;
+      color: #8a7a66;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 6px 20px;
+      line-height: 1.6;
+    }
+    .footer .sources {
+      flex: 1;
+      min-width: 200px;
+    }
+    .footer .sources strong {
+      font-weight: 600;
+      color: #5a3f2b;
+    }
+    .footer .note {
+      white-space: nowrap;
+      color: #a58d78;
+    }
+    @media (max-width: 700px) {
+      #map {
+        height: 500px;
+      }
+      .north-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+        top: 10px;
+        right: 10px;
+      }
+      .legend-inner {
+        bottom: 20px;
+        right: 10px;
+        padding: 6px 10px;
+        max-width: 150px;
+        font-size: 11px;
+        max-height: 200px;
+      }
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer .note {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📜 明代流民迁徙扩散路线（永乐～嘉靖）</h1>
+    <div class="subtitle">流向箭头 · 按迁徙类型配色 · 悬停查看年代</div>
+    <div id="map-wrapper">
+      <div id="map"></div>
+      <div class="north-arrow"><span>N</span></div>
+      <div class="legend-inner" id="legendInner">
+        <div class="legend-title">迁徙类型</div>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="sources">
+        <strong>数据来源：</strong>
+        《中国移民史》第五卷（明代卷）<br />
+        <span style="font-size:11px;color:#8a7a66;">（辅以《明实录》《明会典》《广志绎》等史料佐证）</span>
+      </span>
+      <span class="note">流向动效示意 · 路线依据史料推断</span>
+    </div>
+  </div>
+
+  <script>
+    // ================================================================
+    // 1. 路线元数据
+    // ================================================================
+    const routeMeta = {
+      "R001": { start: 1436, end: 1487 },
+      "R002": { start: 1436, end: 1487 },
+      "R003": { start: 1448, end: 1487 },
+      "R004": { start: 1436, end: 1487 },
+      "R005": { start: 1436, end: 1487 },
+      "R006": { start: 1436, end: 1449 },
+      "R007": { start: 1450, end: 1566 },
+      "R008": { start: 1465, end: 1580 },
+      "R009": { start: 1500, end: 1600 },
+      "R010": { start: 1506, end: 1521 },
+      "R011": { start: 1480, end: 1566 },
+      "R012": { start: 1506, end: 1521 },
+      "R013": { start: 1436, end: 1566 },
+      "R014": { start: 1404, end: 1405 },
+      "R015": { start: 1404, end: 1407 },
+      "R016": { start: 1404, end: 1410 },
+      "R017": { start: 1403, end: 1421 },
+      "R018": { start: 1403, end: 1403 },
+      "R019": { start: 1403, end: 1403 },
+      "R020": { start: 1403, end: 1403 },
+      "R021": { start: 1413, end: 1413 },
+      "R022": { start: 1465, end: 1521 },
+      "R023": { start: 1483, end: 1500 },
+      "R024": { start: 1465, end: 1521 },
+      "R025": { start: 1403, end: 1435 }
+    };
+
+    // ================================================================
+    // 2. 流民点数据
+    // ================================================================
+    const points = [
+      { route: "R001", seq: 1, lon: 111.5178, lat: 36.0880, type: "自发流民", label: "平阳府" },
+      { route: "R001", seq: 2, lon: 111.2256, lat: 35.6139, type: "自发流民", label: "绛州" },
+      { route: "R001", seq: 3, lon: 111.7967, lat: 35.2985, type: "自发流民", label: "垣曲县" },
+      { route: "R001", seq: 4, lon: 112.5856, lat: 35.0972, type: "自发流民", label: "济源县" },
+      { route: "R001", seq: 5, lon: 112.4540, lat: 34.6177, type: "自发流民", label: "河南府" },
+      { route: "R001", seq: 6, lon: 112.5283, lat: 33.0007, type: "自发流民", label: "南阳府" },
+      { route: "R001", seq: 7, lon: 110.7978, lat: 32.8302, type: "自发流民", label: "郧阳府" },
+      { route: "R002", seq: 1, lon: 108.9398, lat: 34.3416, type: "自发流民", label: "西安府" },
+      { route: "R002", seq: 2, lon: 108.2216, lat: 34.1683, type: "自发流民", label: "周至县" },
+      { route: "R002", seq: 3, lon: 107.5563, lat: 33.2256, type: "自发流民", label: "洋县" },
+      { route: "R002", seq: 4, lon: 107.0293, lat: 33.0711, type: "自发流民", label: "汉中府" },
+      { route: "R002", seq: 5, lon: 107.7872, lat: 32.9821, type: "自发流民", label: "西乡县" },
+      { route: "R002", seq: 6, lon: 108.2653, lat: 33.0536, type: "自发流民", label: "石泉县" },
+      { route: "R002", seq: 7, lon: 110.7978, lat: 32.8302, type: "自发流民", label: "郧阳府" },
+      { route: "R003", seq: 1, lon: 114.3075, lat: 34.7977, type: "灾荒流民", label: "开封府" },
+      { route: "R003", seq: 2, lon: 114.1156, lat: 34.4258, type: "灾荒流民", label: "尉氏县" },
+      { route: "R003", seq: 3, lon: 113.8526, lat: 34.0267, type: "灾荒流民", label: "许州" },
+      { route: "R003", seq: 4, lon: 113.3569, lat: 33.6235, type: "灾荒流民", label: "叶县" },
+      { route: "R003", seq: 5, lon: 112.5283, lat: 33.0007, type: "灾荒流民", label: "南阳府" },
+      { route: "R003", seq: 6, lon: 112.1225, lat: 32.0080, type: "灾荒流民", label: "襄阳府" },
+      { route: "R004", seq: 1, lon: 116.8353, lat: 35.5623, type: "灾荒流民", label: "兖州府" },
+      { route: "R004", seq: 2, lon: 116.5871, lat: 35.4153, type: "灾荒流民", label: "济宁州" },
+      { route: "R004", seq: 3, lon: 115.6569, lat: 34.4367, type: "灾荒流民", label: "归德府" },
+      { route: "R004", seq: 4, lon: 114.3075, lat: 34.7977, type: "灾荒流民", label: "开封府" },
+      { route: "R004", seq: 5, lon: 113.8526, lat: 34.0267, type: "灾荒流民", label: "许州" },
+      { route: "R004", seq: 6, lon: 112.2397, lat: 30.3352, type: "灾荒流民", label: "荆州府" },
+      { route: "R005", seq: 1, lon: 105.9876, lat: 31.5678, type: "逃荒逃役", label: "保宁府" },
+      { route: "R005", seq: 2, lon: 105.9234, lat: 31.7562, type: "逃荒逃役", label: "苍溪县" },
+      { route: "R005", seq: 3, lon: 106.2567, lat: 32.8123, type: "逃荒逃役", label: "宁羌州" },
+      { route: "R005", seq: 4, lon: 106.9012, lat: 33.1567, type: "逃荒逃役", label: "沔县" },
+      { route: "R005", seq: 5, lon: 107.0293, lat: 33.0711, type: "逃荒逃役", label: "汉中府" },
+      { route: "R006", seq: 1, lon: 116.4074, lat: 39.9042, type: "逃役流民", label: "顺天府" },
+      { route: "R006", seq: 2, lon: 115.4646, lat: 38.8739, type: "逃役流民", label: "保定府" },
+      { route: "R006", seq: 3, lon: 114.5721, lat: 38.1361, type: "逃役流民", label: "真定府" },
+      { route: "R006", seq: 4, lon: 114.5082, lat: 37.0709, type: "逃役流民", label: "顺德府" },
+      { route: "R006", seq: 5, lon: 114.3926, lat: 36.0985, type: "逃役流民", label: "彰德府" },
+      { route: "R006", seq: 6, lon: 112.5283, lat: 33.0007, type: "逃役流民", label: "南阳府" },
+      { route: "R007", seq: 1, lon: 114.9928, lat: 27.1117, type: "自发垦殖", label: "吉安府" },
+      { route: "R007", seq: 2, lon: 115.5423, lat: 28.0567, type: "自发垦殖", label: "临江府" },
+      { route: "R007", seq: 3, lon: 115.8922, lat: 28.6765, type: "自发垦殖", label: "南昌府" },
+      { route: "R007", seq: 4, lon: 115.9876, lat: 29.7123, type: "自发垦殖", label: "九江府" },
+      { route: "R007", seq: 5, lon: 114.3056, lat: 30.5931, type: "自发垦殖", label: "武昌府" },
+      { route: "R007", seq: 6, lon: 113.4556, lat: 30.3716, type: "自发垦殖", label: "沔阳州" },
+      { route: "R008", seq: 1, lon: 115.8922, lat: 28.6765, type: "自发垦殖", label: "南昌府" },
+      { route: "R008", seq: 2, lon: 114.3926, lat: 27.8123, type: "自发垦殖", label: "袁州府" },
+      { route: "R008", seq: 3, lon: 112.9388, lat: 28.2282, type: "自发垦殖", label: "长沙府" },
+      { route: "R008", seq: 4, lon: 112.3569, lat: 28.5931, type: "自发垦殖", label: "益阳县" },
+      { route: "R008", seq: 5, lon: 111.6983, lat: 29.0379, type: "自发垦殖", label: "常德府" },
+      { route: "R009", seq: 1, lon: 116.3580, lat: 27.9838, type: "经商垦殖", label: "抚州府" },
+      { route: "R009", seq: 2, lon: 114.9928, lat: 27.1117, type: "经商垦殖", label: "吉安府" },
+      { route: "R009", seq: 3, lon: 112.6056, lat: 26.8972, type: "经商垦殖", label: "衡州府" },
+      { route: "R009", seq: 4, lon: 106.6302, lat: 26.6477, type: "经商垦殖", label: "贵阳府" },
+      { route: "R009", seq: 5, lon: 103.7967, lat: 25.4912, type: "经商垦殖", label: "曲靖府" },
+      { route: "R009", seq: 6, lon: 98.4938, lat: 25.0389, type: "经商垦殖", label: "腾冲州" },
+      { route: "R010", seq: 1, lon: 113.5937, lat: 24.8102, type: "逃荒流民", label: "韶州府" },
+      { route: "R010", seq: 2, lon: 113.7569, lat: 25.1234, type: "逃荒流民", label: "仁化县" },
+      { route: "R010", seq: 3, lon: 114.3567, lat: 25.1985, type: "逃荒流民", label: "南雄府" },
+      { route: "R010", seq: 4, lon: 114.3159, lat: 25.6912, type: "逃荒流民", label: "崇义县" },
+      { route: "R011", seq: 1, lon: 116.3653, lat: 25.8338, type: "垦殖流民", label: "汀州府" },
+      { route: "R011", seq: 2, lon: 116.0234, lat: 25.8967, type: "垦殖流民", label: "瑞金县" },
+      { route: "R011", seq: 3, lon: 115.3926, lat: 25.9512, type: "垦殖流民", label: "雩都县" },
+      { route: "R011", seq: 4, lon: 114.9387, lat: 25.8311, type: "垦殖流民", label: "赣州府" },
+      { route: "R012", seq: 1, lon: 114.9928, lat: 27.1117, type: "避役流民", label: "吉安府" },
+      { route: "R012", seq: 2, lon: 114.8926, lat: 26.8123, type: "避役流民", label: "泰和县" },
+      { route: "R012", seq: 3, lon: 114.5569, lat: 26.3456, type: "避役流民", label: "龙泉县" },
+      { route: "R012", seq: 4, lon: 114.3578, lat: 25.3967, type: "避役流民", label: "南安府" },
+      { route: "R013", seq: 1, lon: 120.4504, lat: 36.3862, type: "渡海垦殖", label: "即墨" },
+      { route: "R013", seq: 2, lon: 120.7123, lat: 36.9876, type: "渡海垦殖", label: "莱阳县" },
+      { route: "R013", seq: 3, lon: 120.7569, lat: 37.8123, type: "渡海垦殖", label: "登州港" },
+      { route: "R013", seq: 4, lon: 121.7286, lat: 39.0909, type: "渡海垦殖", label: "金州卫" },
+      { route: "R014", seq: 1, lon: 111.5178, lat: 36.0880, type: "官方民籍", label: "平阳府" },
+      { route: "R014", seq: 2, lon: 112.5489, lat: 37.8706, type: "官方民籍", label: "太原府" },
+      { route: "R014", seq: 3, lon: 112.9567, lat: 39.0876, type: "官方民籍", label: "代州" },
+      { route: "R014", seq: 4, lon: 114.9876, lat: 39.4123, type: "官方民籍", label: "紫荆关" },
+      { route: "R014", seq: 5, lon: 116.4074, lat: 39.9042, type: "官方民籍", label: "顺天府" },
+      { route: "R015", seq: 1, lon: 112.5489, lat: 37.8706, type: "官方民籍", label: "太原府" },
+      { route: "R015", seq: 2, lon: 113.5876, lat: 37.8562, type: "官方民籍", label: "平定州" },
+      { route: "R015", seq: 3, lon: 113.8926, lat: 37.9876, type: "官方民籍", label: "娘子关" },
+      { route: "R015", seq: 4, lon: 114.1234, lat: 38.0567, type: "官方民籍", label: "井陉县" },
+      { route: "R015", seq: 5, lon: 116.0922, lat: 38.4237, type: "官方民籍", label: "河间府" },
+      { route: "R016", seq: 1, lon: 112.8569, lat: 35.4912, type: "官方民籍", label: "泽州" },
+      { route: "R016", seq: 2, lon: 113.1136, lat: 36.1912, type: "官方民籍", label: "潞安府" },
+      { route: "R016", seq: 3, lon: 114.5367, lat: 36.6123, type: "官方民籍", label: "邯郸县" },
+      { route: "R016", seq: 4, lon: 115.1234, lat: 36.2876, type: "官方民籍", label: "大名府" },
+      { route: "R016", seq: 5, lon: 115.9818, lat: 36.4561, type: "官方民籍", label: "东昌府" },
+      { route: "R017", seq: 1, lon: 118.7969, lat: 32.0603, type: "官方匠户", label: "应天府" },
+      { route: "R017", seq: 2, lon: 119.4234, lat: 32.3926, type: "官方匠户", label: "扬州府" },
+      { route: "R017", seq: 3, lon: 119.0234, lat: 33.5931, type: "官方匠户", label: "淮安府" },
+      { route: "R017", seq: 4, lon: 117.1876, lat: 34.2282, type: "官方匠户", label: "徐州" },
+      { route: "R017", seq: 5, lon: 116.5871, lat: 35.4153, type: "官方匠户", label: "济宁州" },
+      { route: "R017", seq: 6, lon: 116.4074, lat: 39.9042, type: "官方匠户", label: "顺天府" },
+      { route: "R018", seq: 1, lon: 120.5853, lat: 31.2991, type: "官方富户", label: "苏州府" },
+      { route: "R018", seq: 2, lon: 119.9567, lat: 31.8123, type: "官方富户", label: "常州府" },
+      { route: "R018", seq: 3, lon: 119.4234, lat: 32.3926, type: "官方富户", label: "扬州府" },
+      { route: "R018", seq: 4, lon: 119.0234, lat: 33.5931, type: "官方富户", label: "淮安府" },
+      { route: "R018", seq: 5, lon: 116.4074, lat: 39.9042, type: "官方富户", label: "顺天府" },
+      { route: "R019", seq: 1, lon: 118.8000, lat: 41.2000, type: "军籍移民", label: "大宁卫" },
+      { route: "R019", seq: 2, lon: 118.3567, lat: 40.3876, type: "军籍移民", label: "喜峰口" },
+      { route: "R019", seq: 3, lon: 117.9876, lat: 40.1985, type: "军籍移民", label: "遵化县" },
+      { route: "R019", seq: 4, lon: 116.4074, lat: 39.9042, type: "军籍移民", label: "顺天府" },
+      { route: "R020", seq: 1, lon: 113.2985, lat: 40.0876, type: "军籍移民", label: "大同卫" },
+      { route: "R020", seq: 2, lon: 113.7569, lat: 40.3876, type: "军籍移民", label: "阳和卫" },
+      { route: "R020", seq: 3, lon: 115.0567, lat: 40.6123, type: "军籍移民", label: "宣府镇" },
+      { route: "R020", seq: 4, lon: 118.8683, lat: 39.8871, type: "军籍移民", label: "永平府" },
+      { route: "R021", seq: 1, lon: 116.4074, lat: 39.9042, type: "官方谪戍", label: "顺天府" },
+      { route: "R021", seq: 2, lon: 116.0876, lat: 40.2876, type: "官方谪戍", label: "居庸关" },
+      { route: "R021", seq: 3, lon: 115.9751, lat: 40.4654, type: "官方谪戍", label: "隆庆州" },
+      { route: "R021", seq: 4, lon: 115.2013, lat: 40.3107, type: "官方谪戍", label: "保安州" },
+      { route: "R022", seq: 1, lon: 93.5133, lat: 42.8258, type: "部族内迁", label: "哈密卫" },
+      { route: "R022", seq: 2, lon: 94.9876, lat: 41.9512, type: "部族内迁", label: "星星峡" },
+      { route: "R022", seq: 3, lon: 95.7569, lat: 40.5876, type: "部族内迁", label: "瓜州" },
+      { route: "R022", seq: 4, lon: 98.4947, lat: 39.7441, type: "部族内迁", label: "肃州" },
+      { route: "R023", seq: 1, lon: 97.0397, lat: 39.9126, type: "部族内迁", label: "赤斤蒙古卫" },
+      { route: "R023", seq: 2, lon: 97.5876, lat: 39.8123, type: "部族内迁", label: "玉门" },
+      { route: "R023", seq: 3, lon: 98.2876, lat: 39.8562, type: "部族内迁", label: "嘉峪关" },
+      { route: "R023", seq: 4, lon: 98.4947, lat: 39.7441, type: "部族内迁", label: "肃州南山" },
+      { route: "R024", seq: 1, lon: 90.5000, lat: 38.2000, type: "部族内迁", label: "安定卫" },
+      { route: "R024", seq: 2, lon: 97.3756, lat: 37.3756, type: "部族内迁", label: "德令哈" },
+      { route: "R024", seq: 3, lon: 98.1234, lat: 39.1234, type: "部族内迁", label: "祁连山隘口" },
+      { route: "R024", seq: 4, lon: 98.4947, lat: 39.7441, type: "部族内迁", label: "肃州" },
+      { route: "R025", seq: 1, lon: 121.8569, lat: 41.5931, type: "部族内附", label: "广宁卫" },
+      { route: "R025", seq: 2, lon: 119.7569, lat: 39.9876, type: "部族内附", label: "山海关" },
+      { route: "R025", seq: 3, lon: 118.8683, lat: 39.8871, type: "部族内附", label: "永平府" },
+      { route: "R025", seq: 4, lon: 116.4074, lat: 39.9042, type: "部族内附", label: "北京城" }
+    ];
+
+    // ================================================================
+    // 3. 数据处理
+    // ================================================================
+    const routeMap = {};
+    points.forEach(p => {
+      if (!routeMap[p.route]) routeMap[p.route] = [];
+      routeMap[p.route].push(p);
+    });
+
+    const typeColorMap = {
+      "自发流民": "#e67e22",
+      "灾荒流民": "#c0392b",
+      "逃荒逃役": "#8a2a1f",
+      "逃役流民": "#b94a3a",
+      "自发垦殖": "#2ecc71",
+      "经商垦殖": "#d35400",
+      "逃荒流民": "#d4524e",
+      "垦殖流民": "#27ae60",
+      "避役流民": "#8e44ad",
+      "渡海垦殖": "#1abc9c",
+      "官方民籍": "#2980b9",
+      "官方匠户": "#1abc9c",
+      "官方富户": "#f1c40f",
+      "军籍移民": "#2c3e50",
+      "官方谪戍": "#9b59b6",
+      "部族内迁": "#7f8c8d",
+      "部族内附": "#34495e"
+    };
+    const defaultColor = "#95a5a6";
+
+    const linesData = [];
+    const startPoints = [];
+    const endPoints = [];
+
+    Object.keys(routeMap).forEach(rid => {
+      const pts = routeMap[rid].sort((a, b) => a.seq - b.seq);
+      if (pts.length < 2) return;
+      const coords = pts.map(p => [p.lon, p.lat]);
+      const type = pts[0].type;
+      const color = typeColorMap[type] || defaultColor;
+      linesData.push({
+        coords: coords,
+        type: type,
+        color: color,
+        routeId: rid
+      });
+      const first = pts[0];
+      const last = pts[pts.length - 1];
+      startPoints.push({ name: first.label, value: [first.lon, first.lat], type: first.type, route: rid });
+      if (last.label !== '顺天府') {
+        endPoints.push({ name: last.label, value: [last.lon, last.lat], type: last.type, route: rid });
+      }
+    });
+
+    // ================================================================
+    // 4. 渲染（多源自动切换）
+    // ================================================================
+    const chartDom = document.getElementById('map');
+    const myChart = echarts.init(chartDom);
+
+    const mapSources = [
+      'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+      'https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/china.geojson',
+      'https://geojson.cn/api/data/china.json'
+    ];
+
+    function tryLoadMap(index) {
+      if (index >= mapSources.length) {
+        document.getElementById('map').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8a7a66;font-size:16px;flex-direction:column;gap:10px;">' +
+          '⚠️ 地图数据加载失败<br/><span style="font-size:13px;color:#a58d78;">请检查网络连接，或尝试刷新页面</span>' +
+          '</div>';
+        return;
+      }
+
+      const url = mapSources[index];
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      fetch(url, { signal: controller.signal })
+        .then(res => {
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          echarts.registerMap('china', data);
+          renderChart();
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          setTimeout(() => tryLoadMap(index + 1), 500);
+        });
+    }
+
+    tryLoadMap(0);
+
+    function renderChart() {
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: function(params) {
+            if (params.seriesType === 'lines') {
+              const d = params.data;
+              const meta = routeMeta[d.routeId] || { start: "?", end: "?" };
+              return `<b>${d.routeId}</b><br/>
+                      类型：${d.type}<br/>
+                      年代：${meta.start} – ${meta.end}`;
+            } else if (params.seriesType === 'scatter') {
+              return `<b>${params.data.name}</b><br/>类型：${params.data.type}<br/>路线：${params.data.route}`;
+            }
+            return '';
+          }
+        },
+        geo: {
+          map: 'china',
+          roam: true,
+          zoom: 1.2,
+          center: [108, 35],
+          label: { show: false },
+          itemStyle: {
+            areaColor: '#e5d9c6',
+            borderColor: '#b3a084',
+            borderWidth: 0.8
+          },
+          emphasis: {
+            itemStyle: { areaColor: '#d0bfa6' }
+          }
+        },
+        series: [{
+          name: '流民迁徙路线',
+          type: 'lines',
+          coordinateSystem: 'geo',
+          data: linesData.map(item => ({
+            coords: item.coords,
+            type: item.type,
+            routeId: item.routeId,
+            lineStyle: {
+              color: item.color,
+              width: 2.2,
+              opacity: 0.8,
+              curveness: 0.05
+            }
+          })),
+          polyline: true,
+          lineStyle: { color: '#b33a2e', width: 1.8 },
+          effect: {
+            show: true,
+            period: 6,
+            trailLength: 0.5,
+            symbol: 'arrow',
+            symbolSize: 8,
+            color: '#d35400'
+          },
+          zlevel: 2
+        }, {
+          name: '起点',
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          data: startPoints.map(p => ({
+            name: p.name,
+            value: p.value,
+            type: p.type,
+            route: p.route
+          })),
+          symbol: 'circle',
+          symbolSize: 10,
+          itemStyle: {
+            color: '#2c6b8f',
+            borderColor: '#fcf8f2',
+            borderWidth: 1.5,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.2)'
+          },
+          label: {
+            show: true,
+            formatter: '{b}',
+            position: 'left',
+            distance: 15,
+            fontSize: 9,
+            color: '#3c2e22',
+            fontWeight: 'bold',
+            textShadow: '1px 1px 2px rgba(255,255,255,0.9)'
+          },
+          zlevel: 3
+        }, {
+          name: '终点',
+          type: 'scatter',
+          coordinateSystem: 'geo',
+          data: endPoints.map(p => ({
+            name: p.name,
+            value: p.value,
+            type: p.type,
+            route: p.route
+          })),
+          symbol: 'diamond',
+          symbolSize: 12,
+          itemStyle: {
+            color: '#b33a2e',
+            borderColor: '#fcf8f2',
+            borderWidth: 1.5,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.2)'
+          },
+          label: {
+            show: true,
+            formatter: '{b}',
+            position: 'right',
+            distance: 15,
+            fontSize: 9,
+            color: '#3c2e22',
+            fontWeight: 'bold',
+            textShadow: '1px 1px 2px rgba(255,255,255,0.9)'
+          },
+          zlevel: 3
+        }]
+      };
+
+      myChart.setOption(option);
+      window.addEventListener('resize', () => myChart.resize());
+
+      // 图例
+      const legendInner = document.getElementById('legendInner');
+      const typeSet = new Set();
+      linesData.forEach(d => typeSet.add(d.type));
+      const sortedTypes = Array.from(typeSet).sort();
+      legendInner.innerHTML = '<div class="legend-title">迁徙类型</div>';
+      sortedTypes.forEach(t => {
+        const color = typeColorMap[t] || defaultColor;
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `<span class="color-box" style="background:${color};"></span>${t}`;
+        legendInner.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>
